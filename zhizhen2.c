@@ -72,12 +72,14 @@ int lengthOfLongestSubstring(char * s)
         {
             if(s[j]==s[i])
             {
-                m=max(m,i-p);
+                i=i-p;
+                m=max(m,i);
                 p=j+1;
             }
         }
     }
-    m=max(m,len-p);
+    len=len-p;
+    m=max(m,len);
     
     return m;
     
