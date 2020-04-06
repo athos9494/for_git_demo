@@ -1,8 +1,7 @@
 #include <stdio.h>
 int* constructArray(int n, int k, int* returnSize)
 {
-    int *res;
-    res=(int*)malloc(sizeof(int)*n);
+    int *res=(int*)malloc(sizeof(int)*n);
     *returnSize=n;
     int i,start=1,temp=k;
     
