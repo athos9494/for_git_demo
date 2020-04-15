@@ -1,169 +1,181 @@
 /*
- 顺序表
- 增加元素扩容，减少元素缩小容量
+ 双向链表
  */
 #include <stdio.h>
 #include <stdlib.h>
-#define SIZE 100
+#define SIZE 5
 #define ADDNUM 9
-#define ADDPOS 3
-#define DELPOS 3
-#define SEARCHNUM 4
+#define ADDPOS 5
+#define DELPOS 5
+#define SEARCHNUM 3
+#define MODIFYPOS 3
 #define MODIFYNUM 27
 
-typedef struct {
-    int *head;       //顺序表指针变量
-    int length;      //记录当前顺序表的长度
-    int capacity;    //记录顺序表分配的存储容量
-    
-} SeqList;
+int length;
 
-/*初始化顺序表*/
-SeqList initSeqList() {
-    SeqList list;
-    list.head = (int *)malloc(SIZE * sizeof(int));
+typedef struct node {
+    struct node *pre;
+    struct node *next;
+    int elem;
+} Node;
+
+/*创建一个结点*/
+Node *initNode(Node *prenode, int elem) {
+    Node *node = (Node *)malloc(sizeof(Node));
+    node->pre = NULL;
+    node->next = NULL;
+    node->elem = elem;
     
-    if (!list.head) {
-        printf("初始化失败！\n");
-        exit(0);
-    }
+    //和前结点建立双层逻辑
+    node->pre = prenode;//当前结点的pre指针指向前结点
+    prenode->next = node;//前结点的next指针指向当前结点
     
-    list.length = 0;
-    list.capacity = SIZE;
-    return list;
+    return node;
 }
 
-/*显示顺序表*/
-void displayList(SeqList list) {
-    for (int i = 0; i < list.length; i++) {
-        printf("%d  ", list.head[i]);
+/*显示链表*/
+void display(Node *p) {
+    Node *temp = p;
+    printf("共%d个元素：", length);
+   
+    while (temp->next) {
+        temp = temp->next;
+        printf("  %d  ", temp->elem);
+        
+        if (temp->next) {
+            printf("<-->");
+        }
     }
     
     printf("\n");
 }
 
+/*找到指定位置的上一个节点*/
+Node *getPreNode(Node *head, int pos, int min , int max) {
+    if (pos > max   || pos < min) {
+        printf("位置有误\n");
+        return NULL;
+    }
+    
+    Node *temp = head;
+    
+    for (int i = 0; i < pos; i++) {
+        temp = temp->next;
+    }
+    
+    return temp;
+}
+
 /*增*/
-SeqList add(SeqList list, int elem, int pos) {
-    //插入位置判断，取值范围为0～length
-    if (pos > list.length  || pos < 0) {
-        printf("插入位置有误\n");
-        return list;
+void add(Node *head, int elem, int pos) {
+    Node *pre = getPreNode(head, pos, 0, length);
+    
+    if (pre == NULL) {
+        return;
     }
     
-    //重新分配内存
-    if (list.length == list.capacity)
-    {
-        int *temp = (int *)realloc(list.head, (list.capacity <<1) * sizeof(int));
-        
-        if (!temp) {
-            printf("内存分配失败！\n");
-            return list;
-        }
-        
-        list.head = temp;
-        list.capacity <<= 1;
+    Node *next = pre->next;//需要插入位置的后结点
+    
+    //创建一个新结点
+    Node *add = (Node *)malloc(sizeof(Node));
+    add->elem = elem;
+    
+    //和前结点建立双层逻辑
+    add->pre = pre;
+    pre->next = add;
+    
+    if (next != NULL) {
+        //和后结点建立双层逻辑
+        add->next = next;
+        next->pre = add;
+    } else {
+        add->next = NULL;
     }
     
-    //插入位置及以后的元素依次后移一位
-    for (int i = list.length - 1; i >= pos ; i--) {
-        list.head[i + 1] = list.head[i];
-    }
-    
-    list.head[pos] = elem;//元素插入空出的位置
-    
-    list.length++;//表长度+1
-    return list;
+    length ++;//表长度+1
 }
 
 /*删*/
-SeqList delete(SeqList list , int pos)
-{
-    //删除位置判断，取值范围为0～length-1
-    if (pos >= list.length || pos < 0) {
-        printf("删除位置有误\n");
-        return list;
+void delete(Node *head, int pos) {
+    Node *pre = getPreNode(head, pos, 0, length - 1);
+    
+    if (pre == NULL) {
+        return;
     }
     
-    if (list.length <= list.capacity)
-    {
-        int *temp = (int *)realloc(list.head, (list.capacity <<1) * sizeof(int));
-        
-        if (!temp) {
-            printf("内存分配失败！\n");
-            return list;
-        }
-        
-        list.head = temp;
-        list.capacity >>= 1;
+    Node *del = pre->next;//需要删除的结点
+    Node *next = del->next;//需要删除结点的后结点
+    
+    pre->next = next;//将前结点的next指针指向后结点
+    
+    if (next != NULL) {
+        next->pre = pre;    //将后结点的pre指针指向前结点
     }
     
-    
-    //将删除位置后续元素依次前移
-    for (int i = pos ; i < list.length - 1 ; i++) {
-        list.head[i] = list.head[i + 1];
-    }
-    
-    list.length--;//表长度-1
-    
-    return list;
+    free(del);//释放删除结点空间
+    del = NULL;
+    length --;//表长度-1
 }
 
-/*int main(void) {
-    SeqList list = initSeqList();
+/*查*/
+/*int search(Node *p , int elem) {
+    int i = 0;
+    Node *temp = p;
     
-    for (int i = 0; i < SIZE; i++) {
-        list.head[i] = i + 1;
-        list.length++;
+    while (temp->next) {
+        temp = temp->next;
+        
+        if (temp->elem == elem) {
+            return i ;
+        }
+        
+        i++;
     }
     
-    printf("顺序表中存储的元素分别是：\n");
-    displayList(list);
-    
-    printf("在顺序表的第%d个位置插入元素：%d\n", ADDPOS, ADDNUM);
-    list = add(list, ADDNUM, ADDPOS);
-    displayList(list);
-    
-    printf("删除第%d个元素\n", DELPOS);
-    list = delete(list, DELPOS);
-    displayList(list);
-    
-    printf("内存空间为%d  数组长度为%d\n", list.capacity, list.length);
-    
-    free(list.head);
-    list.head = NULL;
-    
-    return 0;
+    return -1;
 }
 */
-int main(void)
-{
-    SeqList list =  initSeqList();
-    for (int i = 0; i < 100; i++)
-    {
-        list.head[i]=i+1;
-        list.length++;
+/*改*/
+/*void modify(Node *p, int pos, int val) {
+    Node *temp = p;
+    
+    for (int i = 0; i <= pos ; i++) {
+        temp = temp->next;
     }
-    printf("在顺序表的第%d个位置插入元素：%d\n",ADDPOS,ADDNUM);
-    list = add (list,ADDNUM,ADDPOS);
-    displayList(list);
-  
     
+    temp->elem = val;
+}
+ */
+
+int main() {
+    Node *head = (Node *)malloc(sizeof(Node));//创建头结点
+    Node *pre = head;//将头结点作为首元结点的前一个结点
     
-    printf("内存空间为%d  数组长度为%d\n", list.capacity, list.length);
-    
-    for (int i = 0; i < 100; i++)
-    {
-        
+    for (int i = 0; i < SIZE; i++) {
+        pre = initNode(pre, i + 1);
     }
-    printf("删除第%d个元素\n", DELPOS);
-    list = delete(list, DELPOS);
-    printf("内存空间为%d  数组长度为%d\n", list.capacity, list.length);
-    displayList(list);
     
+    length = SIZE;
     
+    display(head);
     
-    free(list.head);
-    list.head = NULL;
+    //printf("链表中第3个结点的直接前驱是：%d\n", head->next->next->next->pre->elem);
+    
+    printf("在第%d个位置上插入元素%d。\n", ADDPOS, ADDNUM);
+    add(head, ADDNUM, ADDPOS);
+    display(head);
+    
+    printf("删除第%d个位置上元素\n", DELPOS);
+    delete(head, DELPOS);
+    display(head);
+    
+    /*printf("查找元素%d的位置\n", SEARCHNUM);
+    printf("元素%d的为第%d个\n", SEARCHNUM, search(head, SEARCHNUM));
+    
+    printf("把位置%d上的元素修改为%d\n", MODIFYPOS, MODIFYNUM);
+    modify(head, MODIFYPOS, MODIFYNUM);
+    display(head);
+     */
     
     return 0;
 }
