@@ -34,7 +34,7 @@ TreeNode *inserttree(TreeNode *root,int data)
     }
     return root;
 }
-//显示二叉搜索树中所有结点内容
+//显示二叉搜索树中所有结点内容,中序遍历-左中右
 void printtree (TreeNode *root)
 {
     if (root == NULL)
